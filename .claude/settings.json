@@ -13,7 +13,9 @@
       "Bash(sed:*)",
       "Bash(mkdir:*)",
       "Bash(cp:*)",
-      "Bash(bash:*)"
+      "Bash(bash:*)",
+      "Bash(docker:*)",
+      "Bash(docker compose:*)"
     ]
   },
   "hooks": {

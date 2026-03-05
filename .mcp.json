@@ -1,0 +1,31 @@
+{
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "./data",
+        "./config"
+      ],
+      "description": "Gives Claude direct read/write access to data/ and config/ — scoped to those directories only"
+    },
+
+    "fetch": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-fetch"],
+      "description": "Lets Claude make HTTP requests — useful for testing webhooks or querying external APIs during debugging"
+    },
+
+    "sqlite": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-sqlite",
+        "--db-path",
+        "./data/tasks.db"
+      ],
+      "description": "Activate this if you switch the store from JSON to SQLite. Claude can query and inspect the database directly."
+    }
+  }
+}

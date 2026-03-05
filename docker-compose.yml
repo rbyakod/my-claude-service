@@ -1,0 +1,48 @@
+services:
+  my-service:
+    build:
+      context: .
+      target: production
+
+    # ── Port mapping ───────────────────────────────────────────────────────
+    ports:
+      - "127.0.0.1:3000:3000"   # Bind to loopback only — not exposed to the network
+
+    # ── Data persistence ──────────────────────────────────────────────────
+    volumes:
+      - ./data:/app/data        # Tasks survive container restarts
+      - ./config:/app/config:ro # Config is read-only inside the container
+
+    # ── Security hardening ────────────────────────────────────────────────
+    read_only: true             # Container filesystem is read-only
+
+    tmpfs:
+      - /tmp:size=10m,mode=1777 # /tmp is writeable in memory only
+
+    cap_drop:
+      - ALL                     # Drop every Linux capability
+
+    cap_add: []                 # Add back nothing — Node.js needs no special caps
+
+    security_opt:
+      - no-new-privileges:true  # Process can never gain more privileges
+
+    # ── Runtime limits ────────────────────────────────────────────────────
+    mem_limit: 256m
+    cpus: "0.5"
+
+    # ── Restart policy ────────────────────────────────────────────────────
+    restart: unless-stopped
+
+    # ── Environment ───────────────────────────────────────────────────────
+    environment:
+      NODE_ENV: production
+
+    # ── Healthcheck (mirrors the Dockerfile HEALTHCHECK) ─────────────────
+    healthcheck:
+      test: ["CMD", "node", "-e",
+             "fetch('http://localhost:3000/health').then(r=>r.ok?process.exit(0):process.exit(1)).catch(()=>process.exit(1))"]
+      interval: 15s
+      timeout: 3s
+      retries: 3
+      start_period: 5s

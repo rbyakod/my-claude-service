@@ -22,13 +22,17 @@ config/default.json   — runtime configuration (port, log level, max tasks)
 data/tasks.json       — persisted task data (created at runtime)
 deploy/               — systemd and launchd service unit files
 scripts/              — start, stop, status helper scripts
+Dockerfile            — secure multi-stage production image
+docker-compose.yml    — hardened compose config (read-only, non-root, capped)
+.dockerignore         — excludes .claude/, data/, secrets from image
+.mcp.json             — MCP server definitions (filesystem, fetch, sqlite)
 .claude/skills/       — skills you can invoke to extend this service
 ```
 
 ## Running the service
 
 ```bash
-# Development (with live output)
+# Development
 node src/index.js
 
 # macOS service
@@ -40,8 +44,42 @@ launchctl kickstart -k gui/$(id -u)/com.myservice
 systemctl --user start my-service
 systemctl --user stop my-service
 systemctl --user restart my-service
-systemctl --user status my-service
+
+# Docker (recommended for production)
+docker compose up -d
+docker compose down
+docker compose logs -f my-service
 ```
+
+## Docker
+
+The service ships with a secure Dockerfile and docker-compose.yml.
+
+Key security properties:
+- Runs as non-root user (uid 1000)
+- Read-only container filesystem (`--read-only`)
+- Only `data/` (volume) and `/tmp` (tmpfs) are writable
+- All Linux capabilities dropped (`cap_drop: ALL`)
+- Port bound to `127.0.0.1` — not reachable from outside the host
+- Memory: 256 MB, CPU: 0.5 cores
+
+Config is bind-mounted read-only, so you can change `config/default.json`
+on the host and restart the container — no image rebuild needed.
+
+Use the `docker` skill for build, run, log, and troubleshoot commands.
+
+## MCP servers
+
+`.mcp.json` defines MCP servers Claude can use as extra tools.
+Claude loads them automatically at session start.
+
+| Server name  | Package                                       | What it gives Claude            |
+|--------------|-----------------------------------------------|---------------------------------|
+| filesystem   | @modelcontextprotocol/server-filesystem       | Direct read/write on data/ and config/ |
+| fetch        | @modelcontextprotocol/server-fetch            | HTTP requests for webhook testing |
+| sqlite       | @modelcontextprotocol/server-sqlite           | Query data/tasks.db if you switch to SQLite |
+
+To add a new MCP server, use the `add-mcp` skill.
 
 ## Configuration
 
@@ -84,6 +122,9 @@ Available skills:
 - `debug`       — systematic troubleshooting checklist
 - `add-feature` — scaffold a new route or middleware
 - `add-webhook` — add outbound webhook notifications on task events
+- `docker`      — build, run, inspect, and troubleshoot the Docker container
+- `add-skill`   — create a new skill to teach Claude a new capability
+- `add-mcp`     — connect Claude to an external service via MCP
 
 ## Coding conventions
 
