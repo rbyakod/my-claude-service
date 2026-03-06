@@ -1,0 +1,17 @@
+# Runtime data — never commit
+data/
+
+# Secrets — NEVER commit
+.env
+.env.*
+!.env.example
+
+# macOS
+.DS_Store
+
+# Logs
+*.log
+*.err
+
+# Node
+node_modules/
