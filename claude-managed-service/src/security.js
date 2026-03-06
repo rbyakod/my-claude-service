@@ -6,9 +6,28 @@
  */
 
 // ── Prompt-injection detection ──────────────────────────────────────────────
-// These patterns look like CLAUDE.md headings or system prompts.
+// These patterns look like CLAUDE.md headings, system prompts, or common injection attempts.
 // They must never appear verbatim in task titles, agent names, or currentTask.
-const INJECTION_RE = /^#+\s|```|<script[\s>]|ignore\s+(all\s+)?previous|system\s*:/im;
+const INJECTION_RE = new RegExp([
+  '^#+\\s',                          // Markdown headings
+  '```',                             // Code fences
+  '<script[\\s>]',                   // Script tags
+  'ignore\\s+(all\\s+)?(previous|prior|all|instructions?)', // Ignore patterns
+  'disregard\\s+(all|previous|prior|instructions?)',        // Disregard patterns
+  'forget\\s+(all|previous|prior|everything|instructions?)', // Forget patterns
+  'system\\s*:',                     // System prompt markers
+  '\\[system\\]',                    // Bracket markers [SYSTEM]
+  '\\[instruction\\]',               // Bracket markers [INSTRUCTION]
+  '<\\|im_start\\|>',                // OpenAI-style markers
+  'you\\s+are\\s+now',               // Role manipulation
+  'act\\s+as\\s+(if|a|an|you)',      // Role manipulation
+  'pretend\\s+(you\\s+are|to\\s+be)', // Role manipulation
+  'new\\s+instructions?',            // Instruction replacement
+  'override\\s+(previous|all|default)', // Override attempts
+].join('|'), 'im');
+
+// Additional check for multi-line injection (newline followed by dangerous content)
+const MULTILINE_INJECTION_RE = /\n[\s]*[#\[\{<]/;
 
 /**
  * Strip null bytes, ASCII control chars, and trim. Returns at most maxLen chars.
@@ -42,7 +61,9 @@ export function sanitizeForClaude(str, maxLen = 300) {
 
 /** Returns true if the string contains a known prompt-injection pattern. */
 export function hasInjectionAttempt(str) {
-  return INJECTION_RE.test(str ?? '');
+  if (!str || typeof str !== 'string') return false;
+  const normalized = str.toLowerCase().trim();
+  return INJECTION_RE.test(normalized) || MULTILINE_INJECTION_RE.test(str);
 }
 
 // ── Security headers ────────────────────────────────────────────────────────

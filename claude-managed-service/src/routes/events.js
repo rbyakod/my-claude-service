@@ -3,8 +3,57 @@ import { agentStore } from '../agents.js';
 import { emitter }    from '../emitter.js';
 import { config }     from '../config.js';
 import { logger }     from '../logger.js';
+import { sanitizeForClaude } from '../security.js';
 
 const startedAt = Date.now();
+
+// Maximum length for any string field in SSE output
+const MAX_SSE_FIELD_LEN = 100;
+
+// Sanitize task data for SSE broadcast (remove/limit sensitive fields)
+function sanitizeTaskForSSE(task) {
+  return {
+    id:        task.id,
+    title:     sanitizeForClaude(task.title ?? '', MAX_SSE_FIELD_LEN),
+    priority:  task.priority,
+    status:    task.status,
+    createdAt: task.createdAt,
+    updatedAt: task.updatedAt,
+  };
+}
+
+// Sanitize agent data for SSE broadcast (remove metadata, limit currentTask)
+function sanitizeAgentForSSE(agent) {
+  return {
+    id:            agent.id,
+    name:          sanitizeForClaude(agent.name ?? '', MAX_SSE_FIELD_LEN),
+    capability:    sanitizeForClaude(agent.capability ?? '', MAX_SSE_FIELD_LEN),
+    status:        agent.status,
+    currentTask:   agent.currentTask ? sanitizeForClaude(agent.currentTask, MAX_SSE_FIELD_LEN) : null,
+    registeredAt:  agent.registeredAt,
+    lastHeartbeat: agent.lastHeartbeat,
+    // Intentionally exclude metadata - may contain sensitive data
+  };
+}
+
+// Sanitize mutation events before broadcasting
+function sanitizeEventForSSE(event) {
+  if (!event || typeof event !== 'object') return event;
+
+  const sanitized = { ...event };
+
+  // Sanitize task-related events
+  if (sanitized.task) {
+    sanitized.task = sanitizeTaskForSSE(sanitized.task);
+  }
+
+  // Sanitize agent-related events
+  if (sanitized.agent) {
+    sanitized.agent = sanitizeAgentForSSE(sanitized.agent);
+  }
+
+  return sanitized;
+}
 
 function buildSnapshot() {
   const tasks   = store.list();
@@ -23,9 +72,9 @@ function buildSnapshot() {
     tasks: {
       total:    tasks.length,
       byStatus,
-      recent:   tasks.slice(-20).reverse(),
+      recent:   tasks.slice(-20).reverse().map(sanitizeTaskForSSE),
     },
-    agents: agentStore.list(),
+    agents: agentStore.list().map(sanitizeAgentForSSE),
   };
 }
 
@@ -50,7 +99,7 @@ export function handleEvents(req, res) {
   const ticker = setInterval(() => send(buildSnapshot()), 3000);
 
   // Also push targeted mutation events immediately when they happen
-  const unsubscribe = emitter.subscribe(event => send(event));
+  const unsubscribe = emitter.subscribe(event => send(sanitizeEventForSSE(event)));
 
   req.on('close', () => {
     clearInterval(ticker);

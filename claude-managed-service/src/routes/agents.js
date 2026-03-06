@@ -17,7 +17,29 @@ function sanitizeMetadata(raw) {
   // Shallow sanitize — reject if serialized size exceeds cap
   const serialized = JSON.stringify(raw);
   if (serialized.length > MAX_METADATA_BYTES) return {};
-  return raw;
+
+  // Recursively sanitize string values in metadata
+  function sanitizeValue(val, depth = 0) {
+    if (depth > 3) return '[truncated]'; // Prevent deep nesting attacks
+    if (typeof val === 'string') {
+      if (hasInjectionAttempt(val)) return '[sanitized]';
+      return sanitizeText(val, 200);
+    }
+    if (Array.isArray(val)) {
+      return val.slice(0, 10).map(v => sanitizeValue(v, depth + 1));
+    }
+    if (val && typeof val === 'object') {
+      const result = {};
+      for (const [k, v] of Object.entries(val).slice(0, 20)) {
+        const cleanKey = sanitizeText(k, 50);
+        if (cleanKey) result[cleanKey] = sanitizeValue(v, depth + 1);
+      }
+      return result;
+    }
+    return val; // Numbers, booleans, null pass through
+  }
+
+  return sanitizeValue(raw);
 }
 
 export async function handleAgents(req, res, urlParts) {

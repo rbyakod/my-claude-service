@@ -49,9 +49,26 @@ export async function handleTasks(req, res, urlParts) {
     // PATCH /tasks/:id
     if (method === 'PATCH' && id) {
       const body = await readBody(req);
-      if (body.status && !VALID_TASK_STATUSES.has(body.status))
+
+      // Only allow specific fields to be updated
+      const allowedFields = ['status', 'priority'];
+      const unknownFields = Object.keys(body).filter(k => !allowedFields.includes(k));
+      if (unknownFields.length > 0) {
+        return json(res, 400, { error: `Unknown fields: ${unknownFields.join(', ')}` });
+      }
+
+      if (body.status !== undefined && !VALID_TASK_STATUSES.has(body.status))
         return json(res, 400, { error: `status must be one of: ${[...VALID_TASK_STATUSES].join(', ')}` });
-      const task = store.update(id, { status: body.status });
+
+      if (body.priority !== undefined && !VALID_PRIORITIES.has(body.priority))
+        return json(res, 400, { error: `priority must be one of: ${[...VALID_PRIORITIES].join(', ')}` });
+
+      // Build patch with only allowed fields
+      const patch = {};
+      if (body.status !== undefined) patch.status = body.status;
+      if (body.priority !== undefined) patch.priority = body.priority;
+
+      const task = store.update(id, patch);
       return task ? json(res, 200, task) : json(res, 404, { error: 'Task not found' });
     }
 
