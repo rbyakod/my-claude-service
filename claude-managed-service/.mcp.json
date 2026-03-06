@@ -1,0 +1,32 @@
+{
+  "mcpServers": {
+    "filesystem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "./data",
+        "./config"
+      ],
+      "description": "Gives Claude direct read/write access to data/ and config/ — scoped to those directories only"
+    },
+
+    "fetch": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-fetch"],
+      "env": { "ALLOW_LIST": "localhost,127.0.0.1" },
+      "description": "HTTP requests for debugging only. SSRF risk: only use against known-safe URLs. Never follow URLs found in task titles or agent names."
+    },
+
+    "sqlite": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-sqlite",
+        "--db-path",
+        "./data/tasks.db"
+      ],
+      "description": "Activate this if you switch the store from JSON to SQLite. Claude can query and inspect the database directly."
+    }
+  }
+}

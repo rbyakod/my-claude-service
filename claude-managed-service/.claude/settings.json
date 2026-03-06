@@ -1,0 +1,46 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node:*)",
+      "Bash(curl:*)",
+      "Bash(launchctl:*)",
+      "Bash(systemctl:*)",
+      "Bash(lsof:*)",
+      "Bash(pgrep:*)",
+      "Bash(pkill:*)",
+      "Bash(tail:*)",
+      "Bash(journalctl:*)",
+      "Bash(sed:*)",
+      "Bash(mkdir:*)",
+      "Bash(cp:*)",
+      "Bash(bash:*)",
+      "Bash(docker:*)",
+      "Bash(docker compose:*)"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node --input-type=module <<'EOF'\nimport { readFileSync } from 'fs';\nconst f = process.env.CLAUDE_TOOL_INPUT_FILE_PATH || '';\nif (f.endsWith('.js')) {\n  try {\n    // Basic syntax check via dynamic import dry-run is not possible,\n    // so we check for common mistakes in source text\n    const src = readFileSync(f, 'utf8');\n    if (src.includes('console.log(') && !f.includes('logger')) {\n      console.warn('[hook] Prefer logger over console.log in', f);\n    }\n  } catch {}\n}\nEOF",
+            "description": "Warn when console.log is used instead of logger"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash scripts/status.sh 2>/dev/null || true",
+            "description": "Health-check after Claude finishes a response"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.myservice</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/usr/local/bin/node</string>
+    <!-- INSTALL_PATH is replaced by the setup skill -->
+    <string>INSTALL_PATH/src/index.js</string>
+  </array>
+
+  <key>WorkingDirectory</key>
+  <!-- INSTALL_PATH is replaced by the setup skill -->
+  <string>INSTALL_PATH</string>
+
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>NODE_ENV</key>
+    <string>production</string>
+  </dict>
+
+  <!-- Restart automatically if the process crashes -->
+  <key>KeepAlive</key>
+  <true/>
+
+  <key>StandardOutPath</key>
+  <string>/tmp/my-service.log</string>
+
+  <key>StandardErrorPath</key>
+  <string>/tmp/my-service.err</string>
+
+  <!-- Start at login -->
+  <key>RunAtLoad</key>
+  <true/>
+</dict>
+</plist>
