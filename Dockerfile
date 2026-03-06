@@ -10,6 +10,7 @@ WORKDIR /app
 COPY package.json ./
 COPY src/         ./src/
 COPY config/      ./config/
+COPY public/      ./public/
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Stage 2 — production

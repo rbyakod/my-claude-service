@@ -1,7 +1,8 @@
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'fs';
 import { resolve } from 'path';
-import { config } from './config.js';
-import { logger } from './logger.js';
+import { config }  from './config.js';
+import { logger }  from './logger.js';
+import { emitter } from './emitter.js';
 
 const dataDir  = resolve(process.cwd(), config.dataDir);
 const dataFile = resolve(dataDir, 'tasks.json');
@@ -56,6 +57,7 @@ export const store = {
     tasks.push(task);
     writeTasks(tasks);
     logger.info('store: task created', { id: task.id });
+    emitter.emit({ type: 'task.created', task });
     return task;
   },
 
@@ -66,6 +68,7 @@ export const store = {
     tasks[idx] = { ...tasks[idx], ...patch, updatedAt: new Date().toISOString() };
     writeTasks(tasks);
     logger.info('store: task updated', { id });
+    emitter.emit({ type: 'task.updated', task: tasks[idx] });
     return tasks[idx];
   },
 
@@ -75,6 +78,7 @@ export const store = {
     if (next.length === tasks.length) return false;
     writeTasks(next);
     logger.info('store: task deleted', { id });
+    emitter.emit({ type: 'task.deleted', id });
     return true;
   },
 

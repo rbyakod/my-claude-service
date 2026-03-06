@@ -35,6 +35,10 @@ services:
     restart: unless-stopped
 
     # ── Environment ───────────────────────────────────────────────────────
+    # Secrets come from .env — never hardcode them here
+    env_file:
+      - path: .env
+        required: false    # service starts without .env (channels simply stay disabled)
     environment:
       NODE_ENV: production
 

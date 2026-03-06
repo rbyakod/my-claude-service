@@ -1,6 +1,6 @@
 import { config } from './config.js';
 
-const LEVELS = { error: 0, info: 1, debug: 2 };
+const LEVELS = { error: 0, warn: 1, info: 2, debug: 3 };
 const currentLevel = LEVELS[config.logLevel] ?? LEVELS.info;
 
 function log(level, msg, meta = {}) {
@@ -16,6 +16,7 @@ function log(level, msg, meta = {}) {
 
 export const logger = {
   error: (msg, meta) => log('error', msg, meta),
+  warn:  (msg, meta) => log('warn',  msg, meta),
   info:  (msg, meta) => log('info',  msg, meta),
   debug: (msg, meta) => log('debug', msg, meta),
 };
