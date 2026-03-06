@@ -1,3 +1,4 @@
+import crypto from 'node:crypto';
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'fs';
 import { resolve } from 'path';
 import { config }  from './config.js';

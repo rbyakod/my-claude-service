@@ -1,4 +1,17 @@
+# Runtime data
 data/
+
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Logs
 *.log
 *.err
+
+# Node
 node_modules/
+
+# macOS
+.DS_Store

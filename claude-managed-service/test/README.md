@@ -109,19 +109,19 @@ If you want to test with **actual Telegram or WhatsApp** channels:
 4. Message your bot with: `/status`, `/tasks`, `/add Task name`, `/help`
 5. Check that responses come back
 
-### WhatsApp Setup (Twilio)
+### WhatsApp Setup (Baileys Direct Integration)
 
-1. Create a Twilio account and set up WhatsApp Sandbox
-2. For local testing, expose with: `npx localtunnel --port 3000`
-3. Set webhook in Twilio console to `https://<your-tunnel-url>/webhook/whatsapp`
-4. Set env vars in `.env`:
+1. Set env vars in `.env`:
    ```bash
-   TWILIO_AUTH_TOKEN=<your-twilio-token>
-   WHATSAPP_ALLOWED_FROM=whatsapp:+<your-sandbox-number>
+   WHATSAPP_ENABLED=true
    ```
-5. Start the service: `node src/index.js`
-6. Send WhatsApp messages to your Twilio sandbox number
-7. Check that responses are sent back via TwiML
+2. Start the service: `node src/index.js`
+3. Scan the QR code shown in terminal with WhatsApp (Settings → Linked devices)
+4. Wait for "whatsapp: connected and ready" message
+5. Send WhatsApp messages: `status`, `tasks`, `add My task`, `help`
+6. Check that responses come back
+
+**Note:** Requires running the `add-whatsapp` skill first to install the Baileys implementation.
 
 ---
 
